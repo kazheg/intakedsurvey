@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -555,6 +554,8 @@
     top: 50%; left: 50%;
     transform: translate(-50%, -50%);
     width: 320px;
+    max-height: 86vh;
+    overflow-y: auto;
     background: var(--paper);
     border: 1px solid var(--border-live);
     padding: 24px;
@@ -568,10 +569,247 @@
   .settings-row select { font-family: var(--mono); background: var(--bg); color: var(--ink); border: 1px solid var(--border-live); padding: 4px; }
   .settings-close { display: block; width: 100%; margin-top: 20px; text-align: center; }
 
+  /* =========================================================
+     SPLASH GATE ("press to begin")
+  ========================================================= */
+  .splash-screen {
+    position: fixed;
+    inset: 0;
+    background: #050505;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 500;
+    cursor: pointer;
+    transition: opacity 1.1s ease;
+  }
+  .splash-screen.hidden { opacity: 0; pointer-events: none; }
+  .splash-noise {
+    position: absolute;
+    inset: 0;
+    opacity: 0.05;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    mix-blend-mode: overlay;
+  }
+  .splash-mark {
+    font-family: var(--mono);
+    font-size: 13px;
+    letter-spacing: 0.35em;
+    color: #6b6b66;
+    text-transform: uppercase;
+    animation: splashPulse 2.6s ease-in-out infinite;
+  }
+  @keyframes splashPulse {
+    0%, 100% { opacity: 0.35; }
+    50% { opacity: 0.9; }
+  }
+  .splash-sub {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    color: #3a3a38;
+    margin-top: 14px;
+    letter-spacing: 0.1em;
+  }
+
+  /* =========================================================
+     MAIN MENU (title screen)
+  ========================================================= */
+  .menu-screen {
+    position: relative;
+    width: 100%;
+    max-width: 620px;
+    min-height: 70vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    z-index: 10;
+  }
+  .menu-title-wrap { margin-bottom: 46px; position: relative; }
+  .menu-eye { width: 58px; height: 58px; margin: 0 auto 18px; opacity: 0.85; }
+  .menu-eye svg { width: 100%; height: 100%; stroke: var(--ink); fill: none; stroke-width: 1.2; }
+  .menu-title {
+    font-family: var(--current-font);
+    font-size: 34px;
+    letter-spacing: 0.03em;
+    font-weight: 700;
+    margin: 0;
+    position: relative;
+    color: var(--ink);
+  }
+  .menu-title.glitching::before,
+  .menu-title.glitching::after {
+    content: attr(data-text);
+    position: absolute;
+    left: 0; top: 0; width: 100%;
+    pointer-events: none;
+  }
+  .menu-title.glitching::before { color: #c0453e; opacity: 0.6; transform: translate(3px,-1px); clip-path: inset(0 0 55% 0); }
+  .menu-title.glitching::after { color: #3e8fc0; opacity: 0.6; transform: translate(-3px,1px); clip-path: inset(45% 0 0 0); }
+  .menu-subtitle {
+    font-family: var(--mono);
+    font-size: 11.5px;
+    color: var(--ink-soft);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-top: 10px;
+  }
+  .menu-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    width: 260px;
+  }
+  .menu-item {
+    font-family: var(--current-font);
+    font-size: 16.5px;
+    letter-spacing: 0.06em;
+    padding: 9px 4px;
+    color: var(--ink-soft);
+    cursor: pointer;
+    text-transform: uppercase;
+    position: relative;
+    transition: color 0.2s ease;
+  }
+  .menu-item::before {
+    content: '';
+    position: absolute;
+    left: -18px; top: 50%;
+    transform: translateY(-50%);
+    width: 8px; height: 1px;
+    background: var(--ink);
+    opacity: 0;
+    transition: opacity 0.2s ease;
+  }
+  .menu-item.active, .menu-item:hover { color: var(--ink); }
+  .menu-item.active::before, .menu-item:hover::before { opacity: 1; }
+  .menu-item.disabled { opacity: 0.3; cursor: default; }
+  .menu-item.disabled:hover { color: var(--ink-soft); }
+  .menu-item.disabled::before { opacity: 0 !important; }
+  .menu-footer {
+    position: fixed;
+    bottom: 14px;
+    left: 14px;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--ink-soft);
+    opacity: 0.4;
+  }
+
+  /* =========================================================
+     TEXT-INPUT QUESTIONS
+  ========================================================= */
+  .text-input-wrap { margin-bottom: 8px; }
+  .text-answer {
+    width: 100%;
+    font-family: var(--current-font);
+    font-size: 16px;
+    color: var(--ink);
+    background: rgba(0,0,0,0.02);
+    border: none;
+    border-bottom: 1.5px solid var(--border-live);
+    padding: 8px 2px 10px;
+    outline: none;
+    transition: border-color 0.3s ease;
+  }
+  .text-answer:focus { border-color: var(--accent-live); }
+  .text-answer.ghost-write { animation: ghostFlicker 0.12s steps(1); }
+  @keyframes ghostFlicker { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+  .required-tag {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    color: var(--ink-soft);
+    opacity: 0.6;
+    margin-top: 6px;
+  }
+
+  /* =========================================================
+     DEVICE MECHANISM UI
+  ========================================================= */
+  .mic-meter {
+    position: fixed;
+    bottom: 14px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--ink-soft);
+    opacity: 0.55;
+    z-index: 55;
+    pointer-events: none;
+  }
+  .mic-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--ink-soft);
+    transition: background 0.15s ease, transform 0.15s ease;
+  }
+  .mic-dot.hot { background: #b33939; transform: scale(1.6); }
+
+  .away-overlay {
+    position: fixed;
+    inset: 0;
+    background: #000;
+    z-index: 900;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.4s ease;
+  }
+  .away-overlay.show { opacity: 1; pointer-events: auto; }
+  .away-overlay span {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: #6b6b66;
+    letter-spacing: 0.08em;
+  }
+
+  .devtools-banner {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    background: #1f1f1d;
+    color: #c9c6bb;
+    font-family: var(--mono);
+    font-size: 11.5px;
+    text-align: center;
+    padding: 7px;
+    z-index: 250;
+    transform: translateY(-100%);
+    transition: transform 0.5s ease;
+  }
+  .devtools-banner.show { transform: translateY(0); }
+
+  .permission-chip-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 10px;
+  }
+  .permission-chip {
+    font-family: var(--mono);
+    font-size: 9.5px;
+    letter-spacing: 0.04em;
+    padding: 3px 8px;
+    border: 1px solid var(--border-live);
+    border-radius: 10px;
+    color: var(--ink-soft);
+    text-transform: uppercase;
+  }
+  .permission-chip.on { border-color: var(--accent-live); color: var(--ink); }
+
   @media (max-width: 640px) {
     .card, .boot-screen { padding: 26px 22px; }
     .prompt { font-size: 17px; }
     .masthead .title { font-size: 19px; }
+    .menu-title { font-size: 26px; }
+    .menu-list { width: 100%; max-width: 240px; }
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -595,7 +833,17 @@
 
 <div class="scanlines" id="scanlines"></div>
 <div id="app"></div>
-<div class="footer-disclaimer">This is a fictional interactive horror story. No real data is transmitted or stored. Contains themes of psychological unease, paranoia, and memory loss. <br> Made by Paeron. <br> Hoang Sa and Truong Sa belong to Vietnam.</div>
+<div class="footer-disclaimer">This is a fictional interactive horror story. No real data is transmitted or stored anywhere off this device. Camera, microphone, location, and notification access are optional, requested via your browser's normal permission prompts, and used only for local, real-time effects. Contains themes of psychological unease, paranoia, surveillance, and memory loss. <br> Made by Paeron <br> Proudly Made In Vietnam</div>
+
+<div class="devtools-banner" id="devtoolsBanner">the study can see that you are looking behind the curtain.</div>
+<div class="mic-meter" id="micMeter" style="display:none;"><span class="mic-dot" id="micDot"></span><span>ambient calibration active</span></div>
+<div class="away-overlay" id="awayOverlay"><span id="awayText">we noticed.</span></div>
+
+<div class="splash-screen" id="splashScreen">
+  <div class="splash-noise"></div>
+  <div class="splash-mark">press anywhere to begin</div>
+  <div class="splash-sub">Paeron Institute — Terminal Access Rev. 4</div>
+</div>
 
 <div class="controls-container">
   <div class="floating-btn" id="soundToggle">sound: off</div>
@@ -636,6 +884,26 @@
     <span>Webcam Background</span>
     <input type="checkbox" id="camToggle" disabled>
   </div>
+  <div class="settings-row">
+    <span>Ambient Audio Calibration</span>
+    <input type="checkbox" id="micToggle" disabled>
+  </div>
+  <div class="settings-row">
+    <span>Signal Triangulation</span>
+    <input type="checkbox" id="locToggle" disabled>
+  </div>
+  <div class="settings-row">
+    <span>System Notifications</span>
+    <input type="checkbox" id="notifToggle" disabled>
+  </div>
+  <div class="settings-row">
+    <span>Keep Screen Awake</span>
+    <input type="checkbox" id="wakeToggle" disabled>
+  </div>
+  <div class="settings-row">
+    <span style="color:#b33939;">Erase Saved Progress</span>
+    <span class="floating-btn" id="resetProgressBtn" style="border-radius:2px;">reset</span>
+  </div>
   <button class="btn settings-close" id="closeSettingsBtn">Close</button>
 </div>
 
@@ -646,17 +914,35 @@
   /* =========================================================
      STATE
   ========================================================= */
+  const SAVE_KEY = 'cps_study_save_v1';
+
   const state = {
-    screen: 'consent',       // consent | survey | ending
+    screen: 'splash',        // splash | menu | consent | survey | ending
     qIndex: 0,
-    answers: {},             
-    name: 'Subject',         
+    answers: {},
+    name: 'Subject',
     dread: 0,
     reducedMotion: window.matchMedia('(prefers-reduced-motion: reduce)').matches,
     soundOn: false,
     cameraOn: false,
     stream: null,
-    hasDownloadedNote: false
+    hasDownloadedNote: false,
+
+    // --- device / mechanism tracking ---
+    micGranted: false,
+    micStream: null,
+    micHot: false,
+    heardAmbientNoise: false,
+    locGranted: false,
+    coords: null,
+    notifGranted: false,
+    wakeLock: null,
+    wakeLockWanted: false,
+    fullscreenUsed: false,
+    lookAwayCount: 0,
+    devtoolsDetected: false,
+    startTime: null,
+    menuIndex: 0
   };
 
   /* =========================================================
@@ -664,6 +950,9 @@
   ========================================================= */
   const QUESTIONS = [
     // ---------------- Section 1 (Mundane) ----------------
+    { id: 'q0', section: 1, sectionTitle: 'Registration', type: 'text',
+      prompt: 'Before we begin: what name should this study use for you?',
+      placeholder: 'Type your name' },
     { id: 'q1', section: 1, sectionTitle: 'Intake', type: 'single',
       prompt: 'Please select your designated identifier for record-keeping purposes.',
       options: ['Subject A-90', 'Guest', 'I was not given one', 'The name on the door'] },
@@ -741,7 +1030,8 @@
     // ---------------- Section 6 ----------------
     { id: 'q20', section: 6, sectionTitle: 'Personalized Assessment', type: 'single',
       prompt: '{name}, when did you first realize this machine was observing your physical space?',
-      options: ["The very first question", "Just now", "I knew before I clicked", "I am still asleep"] },
+      options: ["The very first question", "Just now", "I knew before I clicked", "I am still asleep"],
+      flags: { progressGlitch: 'rewind' } },
     { id: 'q21', section: 6, sectionTitle: 'Personalized Assessment', type: 'single',
       prompt: 'Do you remember the last time you closed your eyes and saw static instead of darkness?',
       options: ['Yes', 'No', "I see it right now", "I don't want to think about it"],
@@ -766,10 +1056,17 @@
       options: ["Just wires", "Another version of me", "Teeth", "An endless hallway"] },
     { id: 'q27', section: 7, sectionTitle: 'Final Phase', type: 'single',
       prompt: 'We are finished. Choose your final truth. It no longer needs to be real.',
-      options: ["I accept my fate", "Let me out of here", "I will wake up soon", "There is no way out"] }
+      options: ["I accept my fate", "Let me out of here", "I will wake up soon", "There is no way out"] },
+    { id: 'q28', section: 7, sectionTitle: 'Final Phase', type: 'text',
+      prompt: 'There are no answer choices left, {name}. Who taught you not to remember?',
+      placeholder: 'Required field.' },
+    { id: 'q29', section: 7, sectionTitle: 'Final Phase', type: 'text',
+      prompt: 'Last question. What did you promise not to describe?',
+      placeholder: 'Required field.' }
   ];
 
   const SECTION_DREAD = { 1: 0, 2: 1, 3: 3, 4: 5, 5: 7, 6: 8, 7: 10 };
+  const SECTION7_START = QUESTIONS.findIndex(q => q.section === 7);
 
   function fillName(str) {
     return str.replace('{name}', state.name);
@@ -838,6 +1135,217 @@
     }, 100);
   }
 
+  /* =========================================================
+     SESSION PERSISTENCE (Continue / Reset)
+  ========================================================= */
+  function persistProgress() {
+    try {
+      localStorage.setItem(SAVE_KEY, JSON.stringify({
+        qIndex: state.qIndex,
+        answers: state.answers,
+        name: state.name,
+        savedAt: Date.now()
+      }));
+    } catch (e) { /* private browsing / storage disabled — fail silently */ }
+  }
+
+  function loadSavedProgress() {
+    try {
+      const raw = localStorage.getItem(SAVE_KEY);
+      return raw ? JSON.parse(raw) : null;
+    } catch (e) { return null; }
+  }
+
+  function clearSavedProgress() {
+    try { localStorage.removeItem(SAVE_KEY); } catch (e) {}
+  }
+
+  /* =========================================================
+     TAB VISIBILITY — "we noticed you looked away"
+  ========================================================= */
+  document.addEventListener('visibilitychange', () => {
+    if (state.screen !== 'survey') return;
+    if (document.hidden) {
+      state.lookAwayCount += 1;
+      if (state.notifGranted && document.hidden) {
+        try {
+          const n = new Notification('Paeron Institute', {
+            body: state.lookAwayCount > 1 ? 'You have looked away more than once now.' : 'Please return your attention to the study.',
+            silent: true
+          });
+        } catch (e) {}
+      }
+    } else if (state.lookAwayCount > 0) {
+      if (state.reducedMotion) return;
+      const overlay = document.getElementById('awayOverlay');
+      const txt = document.getElementById('awayText');
+      txt.textContent = state.lookAwayCount >= 3 ? "you keep leaving. we keep noticing." : "welcome back. we noticed.";
+      overlay.classList.add('show');
+      playGlitchSound();
+      setTimeout(() => overlay.classList.remove('show'), 1400);
+    }
+  });
+
+  /* =========================================================
+     DEVTOOLS DETECTION — a light heuristic, not a lockout
+  ========================================================= */
+  let devtoolsChecked = false;
+  setInterval(() => {
+    const threshold = 160;
+    const widthGap = window.outerWidth - window.innerWidth > threshold;
+    const heightGap = window.outerHeight - window.innerHeight > threshold;
+    if ((widthGap || heightGap) && !state.devtoolsDetected) {
+      state.devtoolsDetected = true;
+      const banner = document.getElementById('devtoolsBanner');
+      if (banner) {
+        banner.classList.add('show');
+        setTimeout(() => banner.classList.remove('show'), 3200);
+      }
+      try {
+        console.log('%cThe study can see this console is open.', 'color:#b33939;font-size:16px;');
+        console.log('%cThat does not change what it already knows about you.', 'color:#6b6b66;font-size:11px;');
+      } catch (e) {}
+    }
+  }, 1500);
+
+  /* =========================================================
+     CLIPBOARD — copying part of this page copies something else
+  ========================================================= */
+  document.addEventListener('copy', (e) => {
+    if (state.screen !== 'survey' && state.screen !== 'ending') return;
+    const sel = document.getSelection().toString();
+    if (!sel) return;
+    try {
+      e.clipboardData.setData('text/plain', 'It will not let you take that with you. — Paeron Institute');
+      e.preventDefault();
+    } catch (err) {}
+  });
+
+  /* =========================================================
+     BEFOREUNLOAD — the ordinary "are you sure" every browser already has
+  ========================================================= */
+  let leaveWarningEnabled = true;
+  window.addEventListener('beforeunload', (e) => {
+    if (state.screen !== 'survey' || !leaveWarningEnabled) return;
+    e.preventDefault();
+    e.returnValue = '';
+    return '';
+  });
+
+  /* =========================================================
+     WAKE LOCK — "keep your screen awake"
+  ========================================================= */
+  async function requestWakeLockIfWanted() {
+    if (!state.wakeLockWanted || !('wakeLock' in navigator)) return;
+    try {
+      state.wakeLock = await navigator.wakeLock.request('screen');
+    } catch (e) { /* not fatal — many browsers deny this outside a visible tab */ }
+  }
+  function releaseWakeLock() {
+    if (state.wakeLock) { try { state.wakeLock.release(); } catch (e) {} state.wakeLock = null; }
+  }
+
+  /* =========================================================
+     FULLSCREEN — "Full Immersion"
+  ========================================================= */
+  function requestFullscreenIfPossible() {
+    const el = document.documentElement;
+    const req = el.requestFullscreen || el.webkitRequestFullscreen;
+    if (req) {
+      req.call(el).then(() => { state.fullscreenUsed = true; }).catch(() => {});
+    }
+  }
+  document.addEventListener('fullscreenchange', () => {
+    if (document.fullscreenElement) state.fullscreenUsed = true;
+  });
+
+  /* =========================================================
+     GEOLOCATION — "Signal Triangulation" (local only, coarse rounding)
+  ========================================================= */
+  function requestGeolocation() {
+    if (!navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition((pos) => {
+      state.locGranted = true;
+      state.coords = {
+        lat: Math.round(pos.coords.latitude * 10) / 10,
+        lon: Math.round(pos.coords.longitude * 10) / 10
+      };
+      const chip = document.getElementById('locToggle');
+      if (chip) { chip.checked = true; chip.disabled = false; }
+    }, () => {
+      state.locGranted = false;
+    }, { timeout: 8000 });
+  }
+
+  /* =========================================================
+     NOTIFICATIONS
+  ========================================================= */
+  async function requestNotificationsIfPossible() {
+    if (!('Notification' in window)) return;
+    try {
+      const perm = await Notification.requestPermission();
+      state.notifGranted = perm === 'granted';
+      const chip = document.getElementById('notifToggle');
+      if (chip) { chip.checked = state.notifGranted; chip.disabled = !state.notifGranted; }
+    } catch (e) {}
+  }
+
+  /* =========================================================
+     MICROPHONE — real-time ambient reactivity (nothing recorded/stored)
+  ========================================================= */
+  let micAnalyser, micDataArray, micRAF;
+  async function initMic() {
+    try {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) throw new Error('no mic API');
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      state.micStream = stream;
+      state.micGranted = true;
+      if (!audioCtx) initAudio();
+      const source = audioCtx.createMediaStreamSource(stream);
+      micAnalyser = audioCtx.createAnalyser();
+      micAnalyser.fftSize = 512;
+      micDataArray = new Uint8Array(micAnalyser.frequencyBinCount);
+      source.connect(micAnalyser);
+      const chip = document.getElementById('micToggle');
+      if (chip) { chip.checked = true; chip.disabled = false; }
+      document.getElementById('micMeter').style.display = 'flex';
+      pollMic();
+    } catch (err) {
+      console.warn('Microphone access denied or unavailable:', err);
+      state.micGranted = false;
+    }
+  }
+
+  function pollMic() {
+    if (!micAnalyser) return;
+    micAnalyser.getByteTimeDomainData(micDataArray);
+    let sum = 0;
+    for (let i = 0; i < micDataArray.length; i++) {
+      const v = (micDataArray[i] - 128) / 128;
+      sum += v * v;
+    }
+    const rms = Math.sqrt(sum / micDataArray.length);
+    const dot = document.getElementById('micDot');
+    const hot = rms > 0.12;
+    if (dot) dot.classList.toggle('hot', hot);
+    if (hot && state._micListenArmed && !state.heardAmbientNoise) {
+      state.heardAmbientNoise = true;
+      state._micListenArmed = false;
+      showResearcherNote('AMBIENT NOISE DETECTED.\nSUBJECT IS NOT ALONE, OR IS LYING.');
+    }
+    micRAF = requestAnimationFrame(pollMic);
+  }
+
+  function armMicListenMoment() {
+    state._micListenArmed = true;
+    setTimeout(() => { state._micListenArmed = false; }, 12000);
+  }
+
+  function stopMic() {
+    if (state.micStream) { state.micStream.getTracks().forEach(t => t.stop()); }
+    if (micRAF) cancelAnimationFrame(micRAF);
+    micAnalyser = null;
+  }
 
   /* =========================================================
      AUDIO ENGINE (Advanced Horror Synthesis)
@@ -1072,6 +1580,31 @@
     toggleWebcam(e.target.checked);
   });
 
+  document.getElementById('micToggle').addEventListener('change', (e) => {
+    if (e.target.checked && !state.micGranted) initMic();
+    else if (!e.target.checked && state.micGranted) { stopMic(); state.micGranted = false; }
+  });
+
+  document.getElementById('locToggle').addEventListener('change', (e) => {
+    if (e.target.checked) requestGeolocation();
+  });
+
+  document.getElementById('notifToggle').addEventListener('change', (e) => {
+    if (e.target.checked) requestNotificationsIfPossible();
+  });
+
+  document.getElementById('wakeToggle').addEventListener('change', (e) => {
+    state.wakeLockWanted = e.target.checked;
+    if (e.target.checked) requestWakeLockIfWanted();
+    else releaseWakeLock();
+  });
+
+  document.getElementById('resetProgressBtn').addEventListener('click', () => {
+    clearSavedProgress();
+    document.getElementById('resetProgressBtn').textContent = 'erased';
+    setTimeout(() => { document.getElementById('resetProgressBtn').textContent = 'reset'; }, 1200);
+  });
+
   /* =========================================================
      GRAPHICS & EYE TRACKING
   ========================================================= */
@@ -1198,7 +1731,7 @@
     track.appendChild(fill);
     const label = document.createElement('div');
     label.className = 'progress-label';
-    label.innerHTML = '<span id="progressPct"></span><span>' + (state.qIndex >= 21 ? 'PHASE 3' : 'INTAKE') + '</span>';
+    label.innerHTML = '<span id="progressPct"></span><span id="progressPhase"></span>';
     wrap.appendChild(track);
     wrap.appendChild(label);
     container.appendChild(wrap);
@@ -1208,18 +1741,22 @@
   function updateProgress() {
     const fill = document.getElementById('progressFill');
     const pct = document.getElementById('progressPct');
+    const phase = document.getElementById('progressPhase');
     if (!fill || !pct) return;
     const total = QUESTIONS.length;
-    let realPct = Math.round(((state.qIndex) / total) * 100);
     const q = QUESTIONS[state.qIndex];
     const glitch = q && q.flags && q.flags.progressGlitch;
 
+    if (phase) phase.textContent = (state.qIndex >= SECTION7_START) ? 'PHASE 3' : 'INTAKE';
+
     if (q && q.section === 7) {
-      realPct = 100 + (state.qIndex - 22) * 8;
+      const realPct = 100 + (state.qIndex - SECTION7_START) * 8;
       fill.style.width = Math.min(realPct, 150) + '%';
       pct.textContent = realPct + '%';
       return;
     }
+
+    let realPct = Math.round((state.qIndex / total) * 100);
 
     if (glitch === 'stutter') {
       fill.style.width = Math.max(realPct - 9, 2) + '%';
@@ -1231,7 +1768,11 @@
       setTimeout(() => { fill.style.width = realPct + '%'; }, 750);
     } else if (glitch === 'mismatch') {
       fill.style.width = realPct + '%';
-      pct.textContent = Math.max(realPct - 22, 1) + '%'; 
+      pct.textContent = Math.max(realPct - 22, 1) + '%';
+    } else if (glitch === 'rewind') {
+      fill.style.width = Math.max(realPct - 30, 2) + '%';
+      pct.textContent = Math.max(realPct - 30, 0) + '%';
+      setTimeout(() => { fill.style.width = realPct + '%'; pct.textContent = realPct + '%'; }, 900);
     } else {
       fill.style.width = realPct + '%';
       pct.textContent = realPct + '%';
@@ -1265,9 +1806,156 @@
     app.innerHTML = '';
   }
 
-  // --- NEW: BOOT SCREEN ---
-  function renderStartScreen() {
+  /* =========================================================
+     SPLASH GATE
+  ========================================================= */
+  function initSplash() {
+    const splash = document.getElementById('splashScreen');
+    const proceed = () => {
+      if (state.screen !== 'splash') return;
+      splash.classList.add('hidden');
+      initAudio(); // unlock the audio context on this real user gesture
+      state.screen = 'menu';
+      renderMenu();
+    };
+    splash.addEventListener('click', proceed, { once: true });
+    window.addEventListener('keydown', proceed, { once: true });
+  }
+
+  /* =========================================================
+     MAIN MENU (title screen)
+  ========================================================= */
+  let menuGlitchTimer = null;
+
+  function renderMenu() {
     clearApp();
+    state.screen = 'menu';
+    if (menuGlitchTimer) clearTimeout(menuGlitchTimer);
+    const saved = loadSavedProgress();
+
+    const wrap = document.createElement('div');
+    wrap.className = 'menu-screen';
+    wrap.innerHTML = `
+      <div class="menu-title-wrap">
+        <div class="menu-eye"><svg viewBox="0 0 100 100"><path d="M 10 50 Q 50 10 90 50 Q 50 90 10 50"/><circle cx="50" cy="50" r="10" fill="var(--ink)"/></svg></div>
+        <h1 class="menu-title" id="menuTitle" data-text="COGNITIVE &amp; PERCEPTUAL STUDIES">COGNITIVE &amp; PERCEPTUAL STUDIES</h1>
+        <div class="menu-subtitle" id="menuSubtitle">Paeron Institute · Terminal Rev. 4</div>
+      </div>
+      <div class="menu-list" id="menuList"></div>
+    `;
+    app.appendChild(wrap);
+
+    const items = [
+      { label: 'New Study', action: () => { clearSavedProgress(); state.answers = {}; state.qIndex = 0; state.name = 'Subject'; renderConsentScreen(); } },
+      { label: 'Continue', disabled: !saved, action: () => resumeSavedProgress(saved) },
+      { label: 'Settings', action: () => { document.getElementById('settingsModal').classList.add('active'); } },
+      { label: 'About', action: () => showCredits() },
+      { label: 'Exit', action: () => attemptExit() }
+    ];
+    state._menuItems = items;
+
+    const listEl = document.getElementById('menuList');
+    items.forEach((it, i) => {
+      const el = document.createElement('div');
+      el.className = 'menu-item' + (it.disabled ? ' disabled' : '') + (i === 0 ? ' active' : '');
+      el.textContent = it.label;
+      el.addEventListener('click', () => { if (!it.disabled) it.action(); });
+      el.addEventListener('mouseenter', () => setMenuActive(i));
+      listEl.appendChild(el);
+    });
+    state.menuIndex = 0;
+
+    document.addEventListener('keydown', menuKeyHandler);
+    scheduleMenuGlitch();
+  }
+
+  function setMenuActive(i) {
+    const listEl = document.getElementById('menuList');
+    if (!listEl) return;
+    [...listEl.children].forEach((el, idx) => el.classList.toggle('active', idx === i));
+    state.menuIndex = i;
+  }
+
+  function menuKeyHandler(e) {
+    if (state.screen !== 'menu') { document.removeEventListener('keydown', menuKeyHandler); return; }
+    const items = state._menuItems || [];
+    if (!items.length) return;
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      const dir = e.key === 'ArrowDown' ? 1 : -1;
+      let n = state.menuIndex;
+      for (let i = 0; i < items.length; i++) {
+        n = (n + dir + items.length) % items.length;
+        if (!items[n].disabled) break;
+      }
+      setMenuActive(n);
+      playGlitchSound();
+    } else if (e.key === 'Enter') {
+      const it = items[state.menuIndex];
+      if (it && !it.disabled) it.action();
+    }
+  }
+
+  function scheduleMenuGlitch() {
+    menuGlitchTimer = setTimeout(() => {
+      if (state.screen !== 'menu') return;
+      const title = document.getElementById('menuTitle');
+      if (title) {
+        title.classList.add('glitching');
+        setTimeout(() => title.classList.remove('glitching'), 120);
+      }
+      scheduleMenuGlitch();
+    }, 4000 + Math.random() * 5000);
+  }
+
+  function resumeSavedProgress(saved) {
+    if (!saved) return;
+    state.qIndex = saved.qIndex || 0;
+    state.answers = saved.answers || {};
+    state.name = saved.name || 'Subject';
+    state.startTime = Date.now();
+    document.removeEventListener('keydown', menuKeyHandler);
+    state.screen = 'survey';
+    const dreadForSection = (QUESTIONS[state.qIndex] && SECTION_DREAD[QUESTIONS[state.qIndex].section]) || 0;
+    applyDread(dreadForSection);
+    scheduleGlitch();
+    renderSurveyShell();
+  }
+
+  function attemptExit() {
+    try { window.close(); } catch (e) {}
+    const sub = document.getElementById('menuSubtitle');
+    if (sub) {
+      const original = sub.textContent;
+      sub.textContent = 'It does not let you leave from here.';
+      setTimeout(() => { sub.textContent = original; }, 2200);
+    }
+  }
+
+  function showInfoModal(titleText, bodyHtml) {
+    const overlay = document.createElement('div');
+    overlay.className = 'settings-modal active';
+    overlay.style.width = '340px';
+    overlay.innerHTML = `<h2>${titleText}</h2><div style="font-family:var(--mono); font-size:12px; line-height:1.6; color:var(--ink-soft);">${bodyHtml}</div><button class="btn settings-close" id="infoModalClose">Close</button>`;
+    document.body.appendChild(overlay);
+    document.getElementById('infoModalClose').addEventListener('click', () => overlay.remove());
+  }
+
+  function showCredits() {
+    showInfoModal('About This Study', `
+      A fictional interactive experience.<br><br>
+      Not affiliated with any real university, hospital, or ethics board.<br><br>
+      Every permission it asks for is a real browser permission prompt — nothing is transmitted anywhere, and nothing is stored beyond this device.<br><br>
+      <em>"Please remain indoors until further notice."</em>
+    `);
+  }
+
+  /* =========================================================
+     CONSENT / ALLOWANCES SCREEN
+  ========================================================= */
+  function renderConsentScreen() {
+    clearApp();
+    state.screen = 'consent';
     const card = document.createElement('div');
     card.className = 'boot-screen';
     card.innerHTML = `
@@ -1279,58 +1967,90 @@
       </div>
       <h1>Cognitive &amp; Perceptual Studies</h1>
       <div class="protocol-line">Paeron Institute · Terminal Initialization · Rev. 4</div>
-      
+
       <div class="allowances-box">
-        <h3>System Allowances required:</h3>
-        
+        <h3>System allowances requested (all optional except where noted):</h3>
+
         <label class="allowance-row">
           <input type="checkbox" id="allowAudio" checked>
-          <div>
-            <strong>Audio Synthesis</strong>
-            <span class="allowance-desc">Enable atmospheric sound design and auditory feedback. Highly recommended.</span>
-          </div>
+          <div><strong>Audio Synthesis</strong>
+          <span class="allowance-desc">Atmospheric sound and auditory feedback. Recommended.</span></div>
         </label>
 
         <label class="allowance-row">
           <input type="checkbox" id="allowShake" checked>
-          <div>
-            <strong>Haptic / Screen Shake</strong>
-            <span class="allowance-desc">Permit sudden screen movements. Disable if prone to motion sickness.</span>
-          </div>
+          <div><strong>Haptic / Screen Shake</strong>
+          <span class="allowance-desc">Permits sudden screen movements. Disable if prone to motion sickness.</span></div>
         </label>
-        
+
         <label class="allowance-row">
           <input type="checkbox" id="allowCam">
-          <div>
-            <strong>Optical Calibration (Webcam)</strong>
-            <span class="allowance-desc">Allow background optical tracking for personalized perceptual feedback. Optional but recommended.</span>
-          </div>
+          <div><strong>Optical Calibration (Webcam)</strong>
+          <span class="allowance-desc">Background video is analyzed locally for a faint overlay effect. Never recorded or sent anywhere.</span></div>
+        </label>
+
+        <label class="allowance-row">
+          <input type="checkbox" id="allowMic">
+          <div><strong>Ambient Audio Calibration (Microphone)</strong>
+          <span class="allowance-desc">Reacts in real time to real sound in your room. Nothing is recorded or stored.</span></div>
+        </label>
+
+        <label class="allowance-row">
+          <input type="checkbox" id="allowLoc">
+          <div><strong>Signal Triangulation (Location)</strong>
+          <span class="allowance-desc">Used once, locally, rounded to roughly city-block precision. Never leaves this device.</span></div>
+        </label>
+
+        <label class="allowance-row">
+          <input type="checkbox" id="allowNotif">
+          <div><strong>System Notifications</strong>
+          <span class="allowance-desc">Lets the study reach you even if you switch tabs.</span></div>
+        </label>
+
+        <label class="allowance-row">
+          <input type="checkbox" id="allowWake">
+          <div><strong>Keep Screen Awake</strong>
+          <span class="allowance-desc">Prevents your device from sleeping while the study is open.</span></div>
+        </label>
+
+        <label class="allowance-row">
+          <input type="checkbox" id="allowFullscreen">
+          <div><strong>Full Immersion (Fullscreen)</strong>
+          <span class="allowance-desc">Removes your browser chrome for the remainder of the study.</span></div>
         </label>
       </div>
 
       <button class="btn" id="beginBtn" style="width: 100%; font-size: 16px; padding: 14px;">Initialize Protocol</button>
+      <div id="backToMenuBtn" style="margin-top:16px; font-family:var(--mono); font-size:12px; color:var(--ink-soft); cursor:pointer;">&larr; Back to menu</div>
     `;
     app.appendChild(card);
-    
+
+    document.getElementById('backToMenuBtn').addEventListener('click', () => renderMenu());
+
     document.getElementById('beginBtn').addEventListener('click', async () => {
-      // Process Checkboxes
       const audioAllowed = document.getElementById('allowAudio').checked;
       const shakeAllowed = document.getElementById('allowShake').checked;
       const camAllowed = document.getElementById('allowCam').checked;
+      const micAllowed = document.getElementById('allowMic').checked;
+      const locAllowed = document.getElementById('allowLoc').checked;
+      const notifAllowed = document.getElementById('allowNotif').checked;
+      const wakeAllowed = document.getElementById('allowWake').checked;
+      const fsAllowed = document.getElementById('allowFullscreen').checked;
 
       state.reducedMotion = !shakeAllowed;
       document.getElementById('shakeToggle').checked = shakeAllowed;
 
-      if(audioAllowed) { toggleSound(true); }
+      if (audioAllowed) toggleSound(true);
+      if (camAllowed) await initWebcam();
+      if (micAllowed) await initMic();
+      if (locAllowed) requestGeolocation();
+      if (notifAllowed) await requestNotificationsIfPossible();
+      if (wakeAllowed) { state.wakeLockWanted = true; await requestWakeLockIfWanted(); document.getElementById('wakeToggle').checked = true; document.getElementById('wakeToggle').disabled = false; }
+      if (fsAllowed) requestFullscreenIfPossible();
 
-      if(camAllowed) {
-        // Will prompt browser permission
-        await initWebcam();
-      }
-
-      // Start Survey
       state.screen = 'survey';
       state.qIndex = 0;
+      state.startTime = Date.now();
       applyDread(0);
       scheduleGlitch();
       renderSurveyShell();
@@ -1445,6 +2165,41 @@
       
       addContinueRow(cardEl, q, () => selectedValue !== null, () => selectedValue);
     }
+    else if (q.type === 'text') {
+      const wrap = document.createElement('div');
+      wrap.className = 'text-input-wrap';
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.className = 'text-answer';
+      input.placeholder = q.placeholder || 'Required field.';
+      input.autocomplete = 'off';
+      input.spellcheck = false;
+      wrap.appendChild(input);
+      const req = document.createElement('div');
+      req.className = 'required-tag';
+      req.textContent = 'Required field.';
+      wrap.appendChild(req);
+      cardEl.appendChild(wrap);
+
+      input.addEventListener('input', () => {
+        selectedValue = input.value.trim();
+        updateContinueEnabled(selectedValue.length > 0);
+        // Rare, purely cosmetic "the words don't feel like yours" flicker — never touches the actual value
+        if (state.dread >= 5 && Math.random() < 0.05) {
+          input.classList.remove('ghost-write');
+          void input.offsetWidth;
+          input.classList.add('ghost-write');
+        }
+      });
+      setTimeout(() => input.focus(), 350);
+
+      addContinueRow(cardEl, q, () => selectedValue !== null && selectedValue.length > 0, () => selectedValue);
+    }
+
+    // --- ambient microphone mechanism: this question listens for real sound in the room ---
+    if (q.id === 'q22' && state.micGranted) {
+      armMicListenMoment();
+    }
   }
 
   function addContinueRow(cardEl, q, isValidFn, getValueFn) {
@@ -1464,9 +2219,10 @@
       const val = getValueFn();
       state.answers[q.id] = val;
       
-      // Update global name based on Q1
-      if(q.id === 'q1') { state.name = val; }
-      
+      // Update global name based on the registration text field
+      if (q.id === 'q0' && val) { state.name = val; }
+
+      persistProgress();
       playChime();
       btn.disabled = true;
       withTransitionSpinner(cardEl, () => {
@@ -1493,6 +2249,7 @@
       cardEl.classList.remove('leaving');
       cardEl.classList.add('entering');
       renderQuestion(cardEl);
+      if (state.screen === 'ending') return;
       requestAnimationFrame(() => {
         cardEl.classList.remove('entering');
         cardEl.classList.add('visible');
@@ -1505,14 +2262,16 @@
   ========================================================= */
   function runEnding() {
     state.screen = 'ending';
+    leaveWarningEnabled = false; // let them actually leave now — the fiction is over
     if (glitchTimer) clearTimeout(glitchTimer);
+    document.removeEventListener('keydown', menuKeyHandler);
     document.title = state.name;
+    clearSavedProgress();
+    releaseWakeLock();
+    stopMic();
 
-    // Tally Ending Metrics Based on Specific Choices
-    let rebellion = 0;
-    let compliance = 0;
-    let madness = 0;
-
+    // ---- Tally: choice-driven axes (base personality read) ----
+    let rebellion = 0, compliance = 0, madness = 0;
     if (state.answers['q18'] === 'Stop it') rebellion++;
     else if (state.answers['q18'] === "You're welcome") compliance++;
     else if (state.answers['q18'] === "Who are you?") madness++;
@@ -1526,75 +2285,102 @@
     if (state.answers['q24'] === 'At work' || state.answers['q24'] === 'In my bed') compliance++;
     if (state.answers['q26'] === 'Another version of me' || state.answers['q26'] === 'Teeth') madness++;
 
-    // Determine Final Narrative
-    let finalMessage = "Your responses have confirmed conscious awareness.<br><br>Please remain indoors until further notice.";
-    let subText = "This tab was closed.";
-    let finalColor = "#000000";
-    let textStyle = "color: #4a4a48;";
+    const lastWords = (state.answers['q29'] || '').trim();
+    const echoedWords = lastWords ? lastWords : 'nothing at all';
 
-    if (rebellion > compliance && rebellion > madness) {
-      // Ending 1: Rebellion / Containment Breach
+    // ---- Determine final narrative — device-driven endings take priority ----
+    let finalMessage, subText, finalColor, textStyle, endingId;
+    const allDeviceAccessRefused = !state.cameraOn && !state.micGranted && !state.notifGranted && !state.locGranted && !state.fullscreenUsed;
+
+    if (allDeviceAccessRefused) {
+      endingId = 'unseen';
+      finalMessage = "Subject declined every instrument offered to it.<br><br>Insufficient data. Filed as unobserved.";
+      subText = "It could not confirm you were ever really here.";
+      finalColor = "#f2f1ec";
+      textStyle = "color:#3a3a38; font-style:italic;";
+    } else if (state.cameraOn && state.micGranted) {
+      endingId = 'watched';
+      finalMessage = "Subject granted full optical and ambient access.<br><br>Observation complete. Nothing further is required of you.";
+      subText = "It saw you. It heard you. That was the whole study.";
+      finalColor = "#0f0f0f";
+      textStyle = "color:#8c8c8c;";
+    } else if (state.lookAwayCount >= 2) {
+      endingId = 'caught_leaving';
+      finalMessage = "Subject repeatedly attempted to look away.<br><br>Each attempt has been logged, " + state.name + ".";
+      subText = "Looking away was never the same as leaving.";
+      finalColor = "#3d0c0c";
+      textStyle = "color:#ff4a4a; font-weight:bold;";
+      playThud();
+    } else if (rebellion > compliance && rebellion > madness) {
+      endingId = 'rebellion';
       finalMessage = "Subject exhibits extreme hostility.<br><br>Containment breached. Run.";
       subText = "THEY ARE LOOKING FOR YOU.";
-      finalColor = "#3d0c0c"; // Deep blood red
-      textStyle = "color: #ff4a4a; font-weight: bold;";
+      finalColor = "#3d0c0c";
+      textStyle = "color:#ff4a4a; font-weight:bold;";
       playThud();
       setTimeout(playThud, 800);
-    } 
-    else if (compliance > rebellion && compliance > madness) {
-      // Ending 2: Compliance / False Normalcy
+    } else if (compliance > rebellion && compliance > madness) {
+      endingId = 'compliance';
       finalMessage = "Subject is docile. Normalcy sustained.<br><br>Return to your routine. Forget this occurred.";
       subText = "You are safe. Keep your eyes closed.";
-      finalColor = "#f2f1ec"; // Blinding sterile white
-      textStyle = "color: #3a3a38;";
-    } 
-    else {
-      // Ending 3: Madness / Assimilation (Default)
-      finalMessage = "Subject assimilated.<br><br>We will see you in the mirrors.";
+      finalColor = "#f2f1ec";
+      textStyle = "color:#3a3a38;";
+    } else {
+      endingId = 'madness';
+      finalMessage = "Subject assimilated.<br><br>In your own words: \u201C" + echoedWords + "\u201D";
       subText = "Welcome home, " + state.name + ".";
       finalColor = "#050505";
-      textStyle = "color: #8c8c8c;";
+      textStyle = "color:#8c8c8c;";
     }
 
     clearApp();
     document.getElementById('watcher-container').style.opacity = '0.3';
-    
-    // Stop webcam if it's on so the final screen is pure
+
+    // Stop the webcam so the final screen is pure
     toggleWebcam(false);
-    if(state.stream) {
-        state.stream.getTracks().forEach(track => track.stop());
-    }
-    
+    if (state.stream) { state.stream.getTracks().forEach(track => track.stop()); }
+    if (document.fullscreenElement) { try { document.exitFullscreen(); } catch (e) {} }
+
     const overlay = document.createElement('div');
     overlay.className = 'ending-overlay';
     overlay.innerHTML = `<div class="ending-text">${finalMessage}</div>`;
     document.body.appendChild(overlay);
-    
-    // Ramp up the audio noise
-    if(state.breathGainNode && audioCtx) {
-        state.breathGainNode.gain.linearRampToValueAtTime(0.4, audioCtx.currentTime + 3);
-        lfoNode.frequency.linearRampToValueAtTime(2, audioCtx.currentTime + 3);
+
+    if (state.breathGainNode && audioCtx) {
+      state.breathGainNode.gain.linearRampToValueAtTime(0.4, audioCtx.currentTime + 3);
+      if (lfoNode) lfoNode.frequency.linearRampToValueAtTime(2, audioCtx.currentTime + 3);
     }
 
     setTimeout(() => {
       const cover = document.createElement('div');
       cover.className = 'fade-to-color';
       cover.style.backgroundColor = finalColor;
-      
+
       const closed = document.createElement('div');
       closed.className = 'closed-text';
       closed.style.cssText = textStyle;
       closed.textContent = subText;
-      
-      cover.appendChild(closed);
+
+      const replayBtn = document.createElement('div');
+      replayBtn.textContent = 'return to menu';
+      replayBtn.style.cssText = 'font-family:var(--mono); font-size:10.5px; letter-spacing:0.08em; color:inherit; opacity:0.5; margin-top:22px; cursor:pointer; text-align:center;';
+      replayBtn.addEventListener('click', () => { location.reload(); });
+
+      const closedInner = document.createElement('div');
+      closedInner.style.cssText = 'display:flex; flex-direction:column; align-items:center;';
+      closedInner.appendChild(closed);
+      closedInner.appendChild(replayBtn);
+
+      cover.appendChild(closedInner);
       document.body.appendChild(cover);
-      
+
       requestAnimationFrame(() => {
         cover.classList.add('active');
         setTimeout(() => {
           closed.classList.add('show');
-          stopHorrorAudio(); // End audio
-          try { window.close(); } catch (e) {}
+          replayBtn.style.transition = 'opacity 2s ease 1.4s';
+          replayBtn.style.opacity = '0.5';
+          stopHorrorAudio();
         }, 2600);
       });
     }, 3200);
@@ -1603,7 +2389,7 @@
   /* =========================================================
      INIT
   ========================================================= */
-  renderStartScreen();
+  initSplash();
 })();
 </script>
 </body>
