@@ -3,39 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cognitive &amp; Perceptual Studies — Intake Survey README</title>
-<style>
-  body {
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    line-height: 1.6;
-    color: #333;
-    max-width: 800px;
-    margin: 0 auto;
-    padding: 2rem;
-  }
-  h1, h2 {
-    color: #111;
-    border-bottom: 1px solid #eaeaea;
-    padding-bottom: 0.3em;
-    margin-top: 1.5em;
-  }
-  h1 {
-    margin-top: 0;
-  }
-  code {
-    background-color: #f6f8fa;
-    padding: 0.2em 0.4em;
-    border-radius: 3px;
-    font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
-    font-size: 85%;
-  }
-  ul, ol {
-    padding-left: 2em;
-  }
-  li {
-    margin-bottom: 0.5em;
-  }
-</style>
+
 </head>
 <body>
 
