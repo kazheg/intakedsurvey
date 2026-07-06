@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -22,6 +21,7 @@
     --border-live: #c9c6bb;
     --dread: 0;
     --scanline-opacity: 0.06;
+    --vignette-op: 0;
     --serif: 'PT Serif', Georgia, 'Times New Roman', serif;
     --mono: 'IBM Plex Mono', 'Courier New', monospace;
     --current-font: var(--serif);
@@ -35,8 +35,7 @@
     --ink-soft: #9c6c6c;
     --border-live: #5e2626;
     --accent-live: #b33939;
-  }
-  
+  }  
   [data-theme="void"] {
     --bg: #050505;
     --paper: #0f0f0f;
@@ -64,6 +63,17 @@
     transition: filter 3s ease;
     overflow-x: hidden;
   }
+  
+  body.shake {
+    animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
+  }
+
+  @keyframes shake {
+    10%, 90% { transform: translate3d(-2px, 1px, 0) rotate(-0.5deg); }
+    20%, 80% { transform: translate3d(4px, -2px, 0) rotate(1deg); }
+    30%, 50%, 70% { transform: translate3d(-6px, 2px, 0) rotate(-1deg); }
+    40%, 60% { transform: translate3d(6px, -2px, 0) rotate(1deg); }
+  }
 
   #app {
     position: relative;
@@ -78,7 +88,33 @@
 
   a { color: inherit; }
 
-  /* ---------- Background Graphic (Eye) ---------- */
+  /* ---------- Background Graphics & Webcam ---------- */
+  .vignette {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 2;
+    background: radial-gradient(circle at center, transparent 30%, rgba(0,0,0,var(--vignette-op)) 100%);
+    transition: background 2s ease;
+  }
+  
+  #webcam-bg {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    object-fit: cover;
+    z-index: 0;
+    pointer-events: none;
+    opacity: calc(var(--dread) * 0.035); /* Slowly appears as dread increases */
+    filter: grayscale(100%) contrast(150%) brightness(0.6);
+    mix-blend-mode: overlay;
+    transition: opacity 3s ease;
+    display: none;
+  }
+  [data-theme="void"] #webcam-bg { filter: grayscale(100%) contrast(200%) brightness(0.3) invert(1); mix-blend-mode: screen; }
+  [data-theme="crimson"] #webcam-bg { filter: grayscale(100%) contrast(150%) sepia(100%) hue-rotate(320deg) brightness(0.5); }
+
   #watcher-container {
     position: fixed;
     top: 50%;
@@ -372,54 +408,94 @@
   }
   .scanlines.glitch { opacity: 0.15; }
 
-  /* ---------- Consent screen ---------- */
-  .consent-card {
-    max-width: 560px;
+  /* ---------- NEW: Boot/Start Screen ---------- */
+  .boot-screen {
     width: 100%;
+    max-width: 620px;
     background: var(--paper);
     border: 1px solid var(--border-live);
     border-radius: 3px;
     padding: 40px 36px;
     z-index: 10;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
   }
-  .consent-card h1 {
+  .boot-eye {
+    width: 80px;
+    height: 80px;
+    margin-bottom: 20px;
+  }
+  .boot-eye svg {
+    width: 100%;
+    height: 100%;
+    stroke: var(--ink);
+    fill: none;
+    stroke-width: 1.5;
+  }
+  .boot-screen h1 {
     font-family: var(--current-font);
-    font-size: 21px;
-    margin: 0 0 6px;
+    font-size: 24px;
+    margin: 0 0 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
   }
-  .consent-card .protocol-line {
+  .boot-screen .protocol-line {
     font-family: var(--mono);
     font-size: 11px;
     color: var(--ink-soft);
-    margin-bottom: 22px;
+    margin-bottom: 30px;
   }
-  .consent-card p {
-    font-size: 15px;
-    line-height: 1.6;
-    margin-bottom: 16px;
+  .allowances-box {
+    width: 100%;
+    text-align: left;
+    background: rgba(0,0,0,0.03);
+    border: 1px solid var(--border-live);
+    padding: 20px;
+    margin-bottom: 30px;
   }
-  .content-note-box {
+  .allowances-box h3 {
     font-family: var(--mono);
     font-size: 12px;
-    line-height: 1.6;
-    background: rgba(0,0,0,0.04);
-    border: 1px solid var(--border-live);
-    padding: 14px 16px;
-    margin-bottom: 22px;
+    text-transform: uppercase;
+    margin: 0 0 15px 0;
+    color: var(--ink);
+    border-bottom: 1px solid var(--border-live);
+    padding-bottom: 8px;
+  }
+  .allowance-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 12px;
+    font-family: var(--mono);
+    font-size: 13px;
+  }
+  .allowance-row input[type="checkbox"] {
+    margin-right: 12px;
+    width: 16px;
+    height: 16px;
+    accent-color: var(--ink);
+  }
+  .allowance-desc {
+    font-size: 11px;
     color: var(--ink-soft);
+    display: block;
+    margin-top: 2px;
   }
   
   /* ---------- Endings ---------- */
   .ending-overlay {
     position: fixed;
     inset: 0;
-    background: var(--bg);
+    background: transparent;
     display: flex;
     align-items: center;
     justify-content: center;
     z-index: 300;
     text-align: center;
     padding: 20px;
+    transition: background 3s ease;
   }
   .ending-text {
     font-family: var(--current-font);
@@ -428,24 +504,24 @@
     line-height: 1.6;
     color: var(--ink);
   }
-  .fade-to-black {
+  .fade-to-color {
     position: fixed;
     inset: 0;
     background: #000;
     z-index: 400;
     opacity: 0;
-    transition: opacity 3.2s ease;
+    transition: opacity 3.2s ease, background 3.2s ease;
     display: flex;
     align-items: center;
     justify-content: center;
   }
-  .fade-to-black.active { opacity: 1; }
+  .fade-to-color.active { opacity: 1; }
   .closed-text {
     font-family: var(--mono);
     font-size: 13px;
     color: #4a4a48;
     opacity: 0;
-    transition: opacity 2s ease 1s;
+    transition: opacity 2s ease 1s, color 2s ease;
   }
   .closed-text.show { opacity: 1; }
 
@@ -492,7 +568,7 @@
   .settings-close { display: block; width: 100%; margin-top: 20px; text-align: center; }
 
   @media (max-width: 640px) {
-    .card, .consent-card { padding: 26px 22px; }
+    .card, .boot-screen { padding: 26px 22px; }
     .prompt { font-size: 17px; }
     .masthead .title { font-size: 19px; }
   }
@@ -504,7 +580,11 @@
 </style>
 </head>
 <body>
+<!-- Hidden Webcam Element for unsettling background -->
+<video id="webcam-bg" autoplay playsinline muted></video>
+
 <!-- Ambient Horror Graphic -->
+<div class="vignette"></div>
 <div id="watcher-container">
   <svg id="watcher-svg" viewBox="0 0 100 100">
     <path d="M 10 50 Q 50 10 90 50 Q 50 90 10 50" stroke-width="0.5"/>
@@ -514,7 +594,7 @@
 
 <div class="scanlines" id="scanlines"></div>
 <div id="app"></div>
-<div class="footer-disclaimer">This is a fictional interactive horror story. No data is collected, transmitted, or stored. Contains themes of memory loss, identity, and psychological unease.</div>
+<div class="footer-disclaimer">This is a fictional interactive horror story. No real data is transmitted or stored. Contains themes of psychological unease, paranoia, and memory loss.</div>
 
 <div class="controls-container">
   <div class="floating-btn" id="soundToggle">sound: off</div>
@@ -548,8 +628,12 @@
     </select>
   </div>
   <div class="settings-row">
-    <span>Reduced Motion</span>
-    <input type="checkbox" id="globalMotionToggle">
+    <span>Haptic / Shake</span>
+    <input type="checkbox" id="shakeToggle" checked>
+  </div>
+  <div class="settings-row">
+    <span>Webcam Background</span>
+    <input type="checkbox" id="camToggle" disabled>
   </div>
   <button class="btn settings-close" id="closeSettingsBtn">Close</button>
 </div>
@@ -564,18 +648,21 @@
   const state = {
     screen: 'consent',       // consent | survey | ending
     qIndex: 0,
-    answers: {},             // id -> value
-    name: 'Subject',         // Default identifier, overwritten by Q1
+    answers: {},             
+    name: 'Subject',         
     dread: 0,
     reducedMotion: window.matchMedia('(prefers-reduced-motion: reduce)').matches,
-    soundOn: false
+    soundOn: false,
+    cameraOn: false,
+    stream: null,
+    hasDownloadedNote: false
   };
 
   /* =========================================================
-     QUESTION DATA (All Multiple Choice Now)
+     QUESTION DATA (More visceral horror integration)
   ========================================================= */
   const QUESTIONS = [
-    // ---------------- Section 1 ----------------
+    // ---------------- Section 1 (Mundane) ----------------
     { id: 'q1', section: 1, sectionTitle: 'Intake', type: 'single',
       prompt: 'Please select your designated identifier for record-keeping purposes.',
       options: ['Subject A-90', 'Guest', 'I was not given one', 'The name on the door'] },
@@ -593,7 +680,7 @@
       prompt: 'Do you consider yourself a morning person or an evening person?',
       options: ['Morning', 'Evening', 'Neither'] },
 
-    // ---------------- Section 2 ----------------
+    // ---------------- Section 2 (Building Tension) ----------------
     { id: 'q6', section: 2, sectionTitle: 'Preferences', type: 'single',
       prompt: 'What temperature do you prefer your room to be while you sleep?',
       options: ['Cool', 'Neutral', 'Warm', "I don't know"] },
@@ -613,26 +700,26 @@
     // ---------------- Section 3 ----------------
     { id: 'q11', section: 3, sectionTitle: 'Perceptual Baseline', type: 'single',
       prompt: 'As a child, did you ever count the moon and arrive at a number other than one?',
-      options: ['No, never', 'Once, and I dismissed it', 'More than once', "I don't recall counting"],
+      options: ['No, never', 'Once, and I dismissed it', 'More than once', "I don't look at the sky"],
       flags: { progressGlitch: 'stutter' } },
     { id: 'q12', section: 3, sectionTitle: 'Perceptual Baseline', type: 'single',
-      prompt: 'Think of your childhood bedroom. Was there a wall without a door or a window that you avoided?',
-      options: ['No such wall existed', "Yes, but I don't know why I avoided it", "I've never thought about it until now", "I'd rather not answer"],
+      prompt: 'Think of your childhood bedroom. Was there a dark corner that you knew was occupied?',
+      options: ['No', "Yes, but I ignored it", "I've never thought about it until now", "It followed me here"],
       flags: { overwrite: true, progressGlitch: 'jump' } },
     { id: 'q13', section: 3, sectionTitle: 'Perceptual Baseline', type: 'single',
-      prompt: 'Describe where you were on the day the sky was the wrong color.',
+      prompt: 'Describe where you were on the day the sky turned the wrong color.',
       options: ["Hiding under a table", "Looking directly at it", "I was not born yet", "It hasn't happened yet"],
       flags: { progressGlitch: 'mismatch' } },
 
     // ---------------- Section 4 ----------------
     { id: 'q14', section: 4, sectionTitle: 'Perceptual Baseline II', type: 'single',
-      prompt: 'When the lights in a room flicker twice and settle, do you count the shadows before the count is right again?',
-      options: ["I've never noticed shadows behaving that way", 'Yes, quietly', 'I try not to', "I don't understand the question"],
+      prompt: 'When the lights in a room flicker twice and settle, do you count the shadows to make sure none are missing?',
+      options: ["I've never noticed shadows behaving that way", 'Yes, quietly', 'I try not to', "There is an extra one now"],
       flags: { overwrite: true } },
     { id: 'q15', section: 4, sectionTitle: 'Perceptual Baseline II', type: 'single',
-      prompt: "In your kindergarten class photograph, who is the person standing behind you that isn't listed on the roster?",
-      options: ["My imaginary friend", "A dark shadow", "The smiling man", "Me, somehow"],
-      flags: { researcherNote: 'SUBJECT RECALLS THE FIGURE.\nLOG TIMESTAMP.', progressGlitch: 'stutter' } },
+      prompt: "In your oldest family photograph, who is the person standing in the background with no face?",
+      options: ["A stranger", "A trick of the light", "The smiling man", "Me"],
+      flags: { researcherNote: 'SUBJECT RECOGNIZES IT.\nLOG TIMESTAMP.', progressGlitch: 'stutter' } },
     { id: 'q16', section: 4, sectionTitle: 'Perceptual Baseline II', type: 'single',
       prompt: 'How many corners does the room you are currently in have?',
       options: ['3', '4', '5', "Too many to count"],
@@ -641,43 +728,43 @@
     // ---------------- Section 5 ----------------
     { id: 'q17', section: 5, sectionTitle: 'Follow-Up', type: 'single',
       prompt: "Thank you for your patience. Regarding the number you gave us for the room's corners — are you certain?",
-      options: ['Yes', 'No, I may have miscounted', "I didn't give a number", 'Ask me again later'] },
+      options: ['Yes', 'No, I may have miscounted', "I didn't give a number", 'Please let me leave'] },
     { id: 'q18', section: 5, sectionTitle: 'Follow-Up', type: 'single',
-      prompt: 'We appreciate you telling us about {name}.',
+      prompt: 'We appreciate you offering up your identity, {name}. It belongs to the archive now.',
       options: ["I didn't say that", "You're welcome", "Who are you?", "Stop it"],
-      flags: { titleHijack: true, researcherNote: 'PHASE 2 INITIATED.\nSUBJECT RESPONSE CONSISTENT\nWITH PRIOR COHORT.' } },
+      flags: { titleHijack: true, researcherNote: 'PHASE 2 INITIATED.\nSUBJECT DATA SECURED.', triggerDownload: true } },
     { id: 'q19', section: 5, sectionTitle: 'Follow-Up', type: 'single',
-      prompt: 'Is there anyone else in the room with you right now?',
-      options: ['No', 'Yes', "I'm not sure anymore"] },
+      prompt: 'Look behind you. Did you see it move?',
+      options: ['There is nothing there', 'I am not turning around', 'Yes', "It's right beside me now"] },
 
     // ---------------- Section 6 ----------------
     { id: 'q20', section: 6, sectionTitle: 'Personalized Assessment', type: 'single',
-      prompt: '{name}, when did you first suspect that this was not an ordinary survey?',
-      options: ["The very first question", "Just now", "I've been here before", "I am still asleep"] },
+      prompt: '{name}, when did you first realize this machine was observing your physical space?',
+      options: ["The very first question", "Just now", "I knew before I clicked", "I am still asleep"] },
     { id: 'q21', section: 6, sectionTitle: 'Personalized Assessment', type: 'single',
-      prompt: 'Do you remember the last time you closed your eyes for longer than a blink?',
-      options: ['Yes', 'No', "I'm not sure", "I don't want to think about it"],
+      prompt: 'Do you remember the last time you closed your eyes and saw static instead of darkness?',
+      options: ['Yes', 'No', "I see it right now", "I don't want to think about it"],
       flags: { overwrite: true } },
     { id: 'q22', section: 6, sectionTitle: 'Personalized Assessment', type: 'single',
-      prompt: 'Describe the sound the room makes when you stop moving.',
-      options: ["A low hum", "Heavy breathing", "Scratching inside the walls", "Absolute, deafening silence"],
-      flags: { researcherNote: 'SUBJECT ENGAGEMENT NOMINAL.\nPROCEED TO PHASE 3.' } },
+      prompt: 'Describe the sound the room makes when you stop breathing.',
+      options: ["A low hum", "Someone else breathing", "Scratching inside the walls", "Absolute, deafening silence"],
+      flags: { researcherNote: 'SUBJECT IS COMPROMISED.\nPROCEED TO FINAL PHASE.' } },
 
     // ---------------- Section 7 ----------------
     { id: 'q23', section: 7, sectionTitle: 'Final Phase', type: 'single',
       prompt: 'When was the last time you felt certain you were entirely alone?',
       options: ["Years ago", "Right now", "I am never alone", "When I close my eyes"] },
     { id: 'q24', section: 7, sectionTitle: 'Final Phase', type: 'single',
-      prompt: 'Where were you before you opened this page?',
+      prompt: 'Where were you before you became trapped in this interface?',
       options: ["I don't remember", "In my bed", "At work", "Waiting for the signal"] },
     { id: 'q25', section: 7, sectionTitle: 'Final Phase', type: 'single',
       prompt: 'Say your name out loud, {name}. What happened when you did?',
-      options: ["Nothing at all", "Someone whispered it back", "The lights flickered", "I forgot how to speak"] },
+      options: ["Nothing at all", "Something whispered it back", "The screen flickered", "I forgot how to speak"] },
     { id: 'q26', section: 7, sectionTitle: 'Final Phase', type: 'single',
-      prompt: 'What is on the other side of the wall without a door?',
-      options: ["Just dirt", "Another version of me", "Teeth", "An endless hallway"] },
+      prompt: 'What is on the other side of the screen?',
+      options: ["Just wires", "Another version of me", "Teeth", "An endless hallway"] },
     { id: 'q27', section: 7, sectionTitle: 'Final Phase', type: 'single',
-      prompt: 'We are almost finished. Choose your final truth. It no longer needs to be real.',
+      prompt: 'We are finished. Choose your final truth. It no longer needs to be real.',
       options: ["I accept my fate", "Let me out of here", "I will wake up soon", "There is no way out"] }
   ];
 
@@ -688,26 +775,95 @@
   }
 
   /* =========================================================
+     WEBCAM & SYSTEM INTEGRATION (Unexpected Horror)
+  ========================================================= */
+  async function initWebcam() {
+    try {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        throw new Error("Webcam API not supported in this environment");
+      }
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      const video = document.getElementById('webcam-bg');
+      video.srcObject = stream;
+      video.style.display = 'block';
+      state.stream = stream;
+      state.cameraOn = true;
+      const camToggle = document.getElementById('camToggle');
+      if (camToggle) {
+        camToggle.checked = true;
+        camToggle.disabled = false;
+      }
+    } catch (err) {
+      console.warn("Webcam access denied or unavailable:", err);
+      state.cameraOn = false;
+      const camToggle = document.getElementById('camToggle');
+      if (camToggle) {
+        camToggle.checked = false;
+        camToggle.disabled = true;
+      }
+    }
+  }
+
+  function toggleWebcam(forceState) {
+    const video = document.getElementById('webcam-bg');
+    if (forceState !== undefined) {
+      state.cameraOn = forceState;
+    } else {
+      state.cameraOn = !state.cameraOn;
+    }
+    
+    if (state.cameraOn && state.stream) {
+      video.style.display = 'block';
+    } else {
+      video.style.display = 'none';
+    }
+  }
+
+  function downloadCreepyNote() {
+    if (state.hasDownloadedNote) return;
+    state.hasDownloadedNote = true;
+    
+    const content = `We have been watching you through the glass, ${state.name}.\n\nThe survey is a distraction.\nDo not look away from the screen.\nIf you look away, they will know you are aware of them.\n\nThere are 5 corners in your room.\nDon't look at the 5th one.`;
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `truth_about_${state.name}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => {
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }, 100);
+  }
+
+
+  /* =========================================================
      AUDIO ENGINE (Advanced Horror Synthesis)
   ========================================================= */
   let audioCtx, masterGain;
   let humOsc1, humOsc2, noiseNode, filterNode, lfoNode;
+  let heartbeatTimeout;
   
   function initAudio() {
     if (audioCtx) return;
     const AC = window.AudioContext || window.webkitAudioContext;
     if (!AC) return;
-    audioCtx = new AC();
-    masterGain = audioCtx.createGain();
-    masterGain.gain.value = 0;
-    masterGain.connect(audioCtx.destination);
+    try {
+      audioCtx = new AC();
+      masterGain = audioCtx.createGain();
+      masterGain.gain.value = 0;
+      masterGain.connect(audioCtx.destination);
+    } catch (e) {
+      console.warn("Audio context failed to initialize:", e);
+    }
   }
 
   function startHorrorAudio() {
     if (!audioCtx) initAudio();
+    if (!audioCtx) return; // Prevent crash if audio is unavailable
     if (audioCtx.state === 'suspended') audioCtx.resume();
     
-    // Fade in master volume
     masterGain.gain.cancelScheduledValues(audioCtx.currentTime);
     masterGain.gain.linearRampToValueAtTime(0.8, audioCtx.currentTime + 3);
 
@@ -716,8 +872,8 @@
     humOsc2 = audioCtx.createOscillator();
     humOsc1.type = 'sine';
     humOsc2.type = 'sine';
-    humOsc1.frequency.value = 45; // Low sub
-    humOsc2.frequency.value = 47; // Beats at 2Hz
+    humOsc1.frequency.value = 45; 
+    humOsc2.frequency.value = 47; 
     
     let droneGain = audioCtx.createGain();
     droneGain.gain.value = 0.2;
@@ -762,15 +918,55 @@
     lfoNode.start();
     noiseNode.start();
 
-    // Tie breath volume to dread dynamically in the glitch loop
     state.breathGainNode = breathGain; 
+
+    // 3. Start Heartbeat Loop
+    pulseHeart();
+  }
+
+  function pulseHeart() {
+    clearTimeout(heartbeatTimeout);
+    if(!audioCtx || !state.soundOn || state.dread < 2) {
+       heartbeatTimeout = setTimeout(pulseHeart, 1000);
+       return;
+    }
+    
+    const t = audioCtx.currentTime;
+    
+    // Lub
+    const osc1 = audioCtx.createOscillator();
+    const gain1 = audioCtx.createGain();
+    osc1.type = 'sine';
+    osc1.frequency.setValueAtTime(45, t);
+    osc1.frequency.exponentialRampToValueAtTime(10, t + 0.3);
+    gain1.gain.setValueAtTime(0, t);
+    gain1.gain.linearRampToValueAtTime(0.6, t + 0.05);
+    gain1.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
+    osc1.connect(gain1); gain1.connect(masterGain);
+    osc1.start(t); osc1.stop(t + 0.3);
+
+    // Dub
+    const osc2 = audioCtx.createOscillator();
+    const gain2 = audioCtx.createGain();
+    osc2.type = 'sine';
+    osc2.frequency.setValueAtTime(50, t + 0.25);
+    osc2.frequency.exponentialRampToValueAtTime(10, t + 0.55);
+    gain2.gain.setValueAtTime(0, t + 0.25);
+    gain2.gain.linearRampToValueAtTime(0.6, t + 0.3);
+    gain2.gain.exponentialRampToValueAtTime(0.001, t + 0.55);
+    osc2.connect(gain2); gain2.connect(masterGain);
+    osc2.start(t + 0.25); osc2.stop(t + 0.55);
+
+    // Speed increases with dread
+    const speed = Math.max(400, 1500 - (state.dread * 120)); 
+    heartbeatTimeout = setTimeout(pulseHeart, speed);
   }
 
   function stopHorrorAudio() {
     if (masterGain) {
       masterGain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 1);
       setTimeout(() => {
-        try { humOsc1.stop(); humOsc2.stop(); noiseNode.stop(); lfoNode.stop(); } catch(e){}
+        try { humOsc1.stop(); humOsc2.stop(); noiseNode.stop(); lfoNode.stop(); clearTimeout(heartbeatTimeout); } catch(e){}
       }, 1100);
     }
   }
@@ -780,7 +976,7 @@
     const osc = audioCtx.createOscillator();
     const gain = audioCtx.createGain();
     osc.type = 'sine';
-    osc.frequency.value = 660 - (state.dread * 20); // Pitch drops as dread increases
+    osc.frequency.value = 660 - (state.dread * 20); 
     gain.gain.value = 0;
     osc.connect(gain);
     gain.connect(masterGain);
@@ -809,15 +1005,37 @@
     osc.stop(audioCtx.currentTime + 0.3);
   }
 
-  function toggleSound() {
-    state.soundOn = !state.soundOn;
+  function playThud() {
+    if(!audioCtx || !state.soundOn) return;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(120, audioCtx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+    gain.gain.setValueAtTime(1, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.4);
+    osc.connect(gain); gain.connect(masterGain);
+    osc.start(); osc.stop(audioCtx.currentTime + 0.4);
+    
+    if(!state.reducedMotion) {
+        document.body.classList.add('shake');
+        setTimeout(() => document.body.classList.remove('shake'), 400);
+    }
+  }
+
+  function toggleSound(forceState) {
+    if (forceState !== undefined) {
+      state.soundOn = forceState;
+    } else {
+      state.soundOn = !state.soundOn;
+    }
     const btn = document.getElementById('soundToggle');
     btn.textContent = state.soundOn ? 'sound: on' : 'sound: off';
     if (state.soundOn) { startHorrorAudio(); }
     else { stopHorrorAudio(); }
   }
 
-  document.getElementById('soundToggle').addEventListener('click', toggleSound);
+  document.getElementById('soundToggle').addEventListener('click', () => toggleSound());
 
   /* =========================================================
      CUSTOMIZATION MENU
@@ -826,12 +1044,8 @@
   const settingsModal = document.getElementById('settingsModal');
   const closeSettingsBtn = document.getElementById('closeSettingsBtn');
 
-  settingsBtn.addEventListener('click', () => {
-    settingsModal.classList.add('active');
-  });
-  closeSettingsBtn.addEventListener('click', () => {
-    settingsModal.classList.remove('active');
-  });
+  settingsBtn.addEventListener('click', () => { settingsModal.classList.add('active'); });
+  closeSettingsBtn.addEventListener('click', () => { settingsModal.classList.remove('active'); });
 
   document.getElementById('themeSelect').addEventListener('change', (e) => {
     if(e.target.value === 'default') document.body.removeAttribute('data-theme');
@@ -847,10 +1061,14 @@
     document.documentElement.style.setProperty('--scanline-opacity', e.target.value);
   });
 
-  document.getElementById('globalMotionToggle').addEventListener('change', (e) => {
-    state.reducedMotion = e.target.checked;
+  document.getElementById('shakeToggle').addEventListener('change', (e) => {
+    state.reducedMotion = !e.target.checked;
     if(state.reducedMotion) document.getElementById('watcher-container').style.display = 'none';
     else document.getElementById('watcher-container').style.display = 'block';
+  });
+
+  document.getElementById('camToggle').addEventListener('change', (e) => {
+    toggleWebcam(e.target.checked);
   });
 
   /* =========================================================
@@ -859,11 +1077,13 @@
   const pupil = document.getElementById('watcher-pupil');
   document.addEventListener('mousemove', (e) => {
     if (state.reducedMotion || state.dread < 3) return;
+    
+    const jitter = state.dread >= 9 ? (Math.random() * 4 - 2) : 0;
     const x = (e.clientX / window.innerWidth) * 100;
     const y = (e.clientY / window.innerHeight) * 100;
-    // Map cursor position to pupil movement within the SVG box (approx 30 to 70 range)
-    const cx = 40 + (x * 0.2);
-    const cy = 40 + (y * 0.2);
+    
+    const cx = 40 + (x * 0.2) + jitter;
+    const cy = 40 + (y * 0.2) + jitter;
     pupil.setAttribute('cx', cx);
     pupil.setAttribute('cy', cy);
   });
@@ -875,13 +1095,14 @@
     state.dread = level;
     document.documentElement.style.setProperty('--dread', level);
     
-    // Escalate audio mix based on dread
+    // Intensify Vignette 
+    document.documentElement.style.setProperty('--vignette-op', Math.min(level * 0.08, 0.85));
+
     if(state.breathGainNode && audioCtx) {
        state.breathGainNode.gain.linearRampToValueAtTime(0.05 + (level * 0.02), audioCtx.currentTime + 2);
     }
-    
     if(level >= 5 && lfoNode && audioCtx) {
-       lfoNode.frequency.linearRampToValueAtTime(0.3 + (level*0.05), audioCtx.currentTime + 2); // faster breathing
+       lfoNode.frequency.linearRampToValueAtTime(0.3 + (level*0.05), audioCtx.currentTime + 2); 
     }
   }
 
@@ -891,7 +1112,7 @@
   let glitchTimer = null;
   function scheduleGlitch() {
     if (state.reducedMotion) return;
-    const base = 26000; // ~26s baseline
+    const base = 26000; 
     const variance = 14000;
     const speedUp = Math.max(0.2, 1 - state.dread * 0.1);
     const delay = (base - state.dread * 1800 + (Math.random() * variance)) * speedUp;
@@ -907,21 +1128,34 @@
     const promptEl = document.querySelector('.prompt');
     const roll = Math.random();
     
+    // Random hard thud jump scare at high dread
+    if (state.dread >= 6 && roll < 0.25) {
+       playThud();
+       // Flash webcam aggressively if enabled
+       if(state.cameraOn && state.stream) {
+         const vid = document.getElementById('webcam-bg');
+         const oldFilter = vid.style.filter;
+         vid.style.filter = 'grayscale(0) contrast(300%) invert(1)';
+         vid.style.opacity = '0.8';
+         setTimeout(() => {
+           vid.style.filter = oldFilter;
+           vid.style.opacity = `calc(var(--dread) * 0.035)`;
+         }, 150);
+       }
+    }
+
     if (roll < 0.45 && promptEl) {
-      // Chromatic aberration flicker
       promptEl.setAttribute('data-text', promptEl.textContent);
       promptEl.classList.add('glitching');
       if (state.dread > 4) playGlitchSound();
       setTimeout(() => promptEl.classList.remove('glitching'), 90 + Math.random() * 80);
     } 
     else if (roll < 0.75 && state.dread >= 2) {
-      // Scanline pulse
       const sl = document.getElementById('scanlines');
       sl.classList.add('glitch');
       setTimeout(() => sl.classList.remove('glitch'), 800 + Math.random() * 500);
     } 
     else if (state.dread >= 4 && promptEl) {
-      // One-frame text substitution
       const original = promptEl.textContent;
       const decoys = ['IT IS STILL WAITING', 'DO NOT LOOK AWAY', 'THEY ARE BEHIND YOU', original];
       promptEl.textContent = decoys[Math.floor(Math.random() * 3)];
@@ -936,7 +1170,7 @@
      RESEARCHER NOTE POPUP
   ========================================================= */
   function showResearcherNote(text) {
-    if (state.reducedMotion) return; // Hide jump scare boxes if motion reduced
+    if (state.reducedMotion) return;
     const note = document.createElement('div');
     const corner = Math.random() < 0.5 ? 'top-right' : 'bottom-left';
     note.className = 'researcher-note ' + corner;
@@ -980,7 +1214,6 @@
     const glitch = q && q.flags && q.flags.progressGlitch;
 
     if (q && q.section === 7) {
-      // section 7: bar exceeds 100%
       realPct = 100 + (state.qIndex - 22) * 8;
       fill.style.width = Math.min(realPct, 150) + '%';
       pct.textContent = realPct + '%';
@@ -1031,31 +1264,75 @@
     app.innerHTML = '';
   }
 
-  function renderConsent() {
+  // --- NEW: BOOT SCREEN ---
+  function renderStartScreen() {
     clearApp();
     const card = document.createElement('div');
-    card.className = 'consent-card';
+    card.className = 'boot-screen';
     card.innerHTML = `
-      <h1>Department of Cognitive &amp; Perceptual Studies</h1>
-      <div class="protocol-line">Meridian Institute · Protocol No. MI-77-&#920; · Intake Survey, Rev. 4</div>
-      <p>Thank you for agreeing to participate in this short intake survey. It will take approximately eight minutes to complete. Your responses help us calibrate baseline perceptual data across participants.</p>
-      <div class="content-note-box">CONTENT NOTE: This is an interactive horror experience. Adjust visual & audio settings via the gear icon below. Please enable sound for the full experience.</div>
-      <div class="btn-row" style="justify-content:flex-start;">
-        <button class="btn" id="beginBtn">Acknowledge & Begin</button>
+      <div class="boot-eye">
+        <svg viewBox="0 0 100 100">
+          <path d="M 10 50 Q 50 10 90 50 Q 50 90 10 50"/>
+          <circle cx="50" cy="50" r="12" fill="var(--ink)"/>
+        </svg>
       </div>
+      <h1>Cognitive &amp; Perceptual Studies</h1>
+      <div class="protocol-line">Meridian Institute · Terminal Initialization · Rev. 4</div>
+      
+      <div class="allowances-box">
+        <h3>System Allowances required:</h3>
+        
+        <label class="allowance-row">
+          <input type="checkbox" id="allowAudio" checked>
+          <div>
+            <strong>Audio Synthesis</strong>
+            <span class="allowance-desc">Enable atmospheric sound design and auditory feedback. Highly recommended.</span>
+          </div>
+        </label>
+
+        <label class="allowance-row">
+          <input type="checkbox" id="allowShake" checked>
+          <div>
+            <strong>Haptic / Screen Shake</strong>
+            <span class="allowance-desc">Permit sudden screen movements. Disable if prone to motion sickness.</span>
+          </div>
+        </label>
+        
+        <label class="allowance-row">
+          <input type="checkbox" id="allowCam">
+          <div>
+            <strong>Optical Calibration (Webcam)</strong>
+            <span class="allowance-desc">Allow background optical tracking for personalized perceptual feedback. Optional but recommended.</span>
+          </div>
+        </label>
+      </div>
+
+      <button class="btn" id="beginBtn" style="width: 100%; font-size: 16px; padding: 14px;">Initialize Protocol</button>
     `;
     app.appendChild(card);
-    document.getElementById('globalMotionToggle').checked = state.reducedMotion;
     
-    document.getElementById('beginBtn').addEventListener('click', () => {
+    document.getElementById('beginBtn').addEventListener('click', async () => {
+      // Process Checkboxes
+      const audioAllowed = document.getElementById('allowAudio').checked;
+      const shakeAllowed = document.getElementById('allowShake').checked;
+      const camAllowed = document.getElementById('allowCam').checked;
+
+      state.reducedMotion = !shakeAllowed;
+      document.getElementById('shakeToggle').checked = shakeAllowed;
+
+      if(audioAllowed) { toggleSound(true); }
+
+      if(camAllowed) {
+        // Will prompt browser permission
+        await initWebcam();
+      }
+
+      // Start Survey
       state.screen = 'survey';
       state.qIndex = 0;
       applyDread(0);
       scheduleGlitch();
       renderSurveyShell();
-      
-      // Auto-start audio if allowed, otherwise rely on toggle
-      if(state.soundOn) startHorrorAudio();
     });
   }
 
@@ -1063,7 +1340,7 @@
     const m = document.createElement('div');
     m.className = 'masthead';
     m.innerHTML = `
-      <div class="dept">Department of Cognitive &amp; Perceptual Studies</div>
+      <div class="dept">Department of Cognitive and Perceptual Studies</div>
       <div class="title">Intake Survey</div>
       <div class="protocol">Protocol No. MI-77-&#920; · Meridian Institute · Confidential</div>
     `;
@@ -1093,6 +1370,10 @@
       document.title = state.name;
       const fav = document.getElementById('favicon');
       fav.href = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%23000'/%3E%3C/svg%3E";
+    }
+
+    if (q.flags && q.flags.triggerDownload) {
+      downloadCreepyNote();
     }
 
     const dreadForSection = SECTION_DREAD[q.section] !== undefined ? SECTION_DREAD[q.section] : state.dread;
@@ -1219,19 +1500,73 @@
   }
 
   /* =========================================================
-     ENDING SEQUENCE
+     ENDING SEQUENCE - BRANCHING LOGIC
   ========================================================= */
   function runEnding() {
     state.screen = 'ending';
     if (glitchTimer) clearTimeout(glitchTimer);
     document.title = state.name;
 
+    // Tally Ending Metrics Based on Specific Choices
+    let rebellion = 0;
+    let compliance = 0;
+    let madness = 0;
+
+    if (state.answers['q18'] === 'Stop it') rebellion++;
+    else if (state.answers['q18'] === "You're welcome") compliance++;
+    else if (state.answers['q18'] === "Who are you?") madness++;
+
+    if (state.answers['q27'] === 'Let me out of here') rebellion += 2;
+    else if (state.answers['q27'] === 'I will wake up soon') compliance += 2;
+    else if (state.answers['q27'] === 'I accept my fate') madness += 2;
+    else if (state.answers['q27'] === 'There is no way out') madness += 1;
+
+    if (state.answers['q13'] === 'Looking directly at it') madness++;
+    if (state.answers['q24'] === 'At work' || state.answers['q24'] === 'In my bed') compliance++;
+    if (state.answers['q26'] === 'Another version of me' || state.answers['q26'] === 'Teeth') madness++;
+
+    // Determine Final Narrative
+    let finalMessage = "Your responses have confirmed conscious awareness.<br><br>Please remain indoors until further notice.";
+    let subText = "This tab was closed.";
+    let finalColor = "#000000";
+    let textStyle = "color: #4a4a48;";
+
+    if (rebellion > compliance && rebellion > madness) {
+      // Ending 1: Rebellion / Containment Breach
+      finalMessage = "Subject exhibits extreme hostility.<br><br>Containment breached. Run.";
+      subText = "THEY ARE LOOKING FOR YOU.";
+      finalColor = "#3d0c0c"; // Deep blood red
+      textStyle = "color: #ff4a4a; font-weight: bold;";
+      playThud();
+      setTimeout(playThud, 800);
+    } 
+    else if (compliance > rebellion && compliance > madness) {
+      // Ending 2: Compliance / False Normalcy
+      finalMessage = "Subject is docile. Normalcy sustained.<br><br>Return to your routine. Forget this occurred.";
+      subText = "You are safe. Keep your eyes closed.";
+      finalColor = "#f2f1ec"; // Blinding sterile white
+      textStyle = "color: #3a3a38;";
+    } 
+    else {
+      // Ending 3: Madness / Assimilation (Default)
+      finalMessage = "Subject assimilated.<br><br>We will see you in the mirrors.";
+      subText = "Welcome home, " + state.name + ".";
+      finalColor = "#050505";
+      textStyle = "color: #8c8c8c;";
+    }
+
     clearApp();
     document.getElementById('watcher-container').style.opacity = '0.3';
     
+    // Stop webcam if it's on so the final screen is pure
+    toggleWebcam(false);
+    if(state.stream) {
+        state.stream.getTracks().forEach(track => track.stop());
+    }
+    
     const overlay = document.createElement('div');
     overlay.className = 'ending-overlay';
-    overlay.innerHTML = '<div class="ending-text">Your responses have confirmed conscious awareness.<br><br>Please remain indoors until further notice.</div>';
+    overlay.innerHTML = `<div class="ending-text">${finalMessage}</div>`;
     document.body.appendChild(overlay);
     
     // Ramp up the audio noise
@@ -1241,16 +1576,20 @@
     }
 
     setTimeout(() => {
-      const black = document.createElement('div');
-      black.className = 'fade-to-black';
+      const cover = document.createElement('div');
+      cover.className = 'fade-to-color';
+      cover.style.backgroundColor = finalColor;
+      
       const closed = document.createElement('div');
       closed.className = 'closed-text';
-      closed.textContent = 'This tab was closed.';
-      black.appendChild(closed);
-      document.body.appendChild(black);
+      closed.style.cssText = textStyle;
+      closed.textContent = subText;
+      
+      cover.appendChild(closed);
+      document.body.appendChild(cover);
       
       requestAnimationFrame(() => {
-        black.classList.add('active');
+        cover.classList.add('active');
         setTimeout(() => {
           closed.classList.add('show');
           stopHorrorAudio(); // End audio
@@ -1263,7 +1602,7 @@
   /* =========================================================
      INIT
   ========================================================= */
-  renderConsent();
+  renderStartScreen();
 })();
 </script>
 </body>
